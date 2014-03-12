@@ -6,7 +6,7 @@ Turning the microcodes of dynamips into compilable sources.
 I'm gonna start with `ppc32_microcode` since 32-bit PowerPC assembly is easier
 than 64-bit MIPS assembly.
 
-_Flávio J. Saraiva _
+_Flávio J. Saraiva_
 
 Dynamips
 --------
@@ -28,7 +28,7 @@ Microcode
 
 The microcode has enough features to run the IOS image but don't expect any of
 other ROMMON features. There is some work done for restart but it appears to be
-imcomplete.
+incomplete.
 
 It is unlikely to work in other emulators since it relies on the incompleteness
 of the emulated hardware and on the custom remote control device found in
@@ -42,6 +42,7 @@ I use two cross-compilers created with [crosstools-ng](http://crosstool-ng.org/)
  - powerpc-unknown-elf for `ppc32_microcode`
  - mips64-unknown-elf for `mips64_microcode`
 
+Each toolchain will be inside a subdirectory of ~/x-tools.
 They are used to decompile the original binary files and to compile the
 disassembled microcode for testing and comparing purposes.
 
@@ -54,7 +55,7 @@ powerpc-unknown-elf
 ```
 ct-ng mips-unknown-elf
 ct-ng menuconfig
-  - ...
+  >  Target options  >  Target Architecture (powerpc)
 ct-ng build
 ```
 
@@ -64,6 +65,8 @@ mips64-unknown-elf
 ```
 ct-ng mips-unknown-elf
 ct-ng menuconfig
-  - ...
+  >  Paths and misc options  >  [*] Try features marked as EXPERIMENTAL
+  >  Target options  >  Bitness (64-bit)
+  >  Target options  >  ABI (n64)
 ct-ng build
 ```
