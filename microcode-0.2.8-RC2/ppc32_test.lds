@@ -1,0 +1,8 @@
+SECTIONS { . = 0xfff00000; }
+INSERT BEFORE .text
+
+SECTIONS { . = 0xfff043b8; }
+INSERT BEFORE .data
+
+SECTIONS { . = 0x00004000; }
+INSERT BEFORE .bss
