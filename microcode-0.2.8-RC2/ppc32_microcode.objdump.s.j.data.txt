@@ -1,0 +1,5 @@
+
+ppc32_microcode:     file format elf32-powerpc
+
+Contents of section .data:
+ fff043b8 fff042d8 00000000                    ..B.....        

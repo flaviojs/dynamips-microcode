@@ -1,0 +1,38 @@
+
+ppc32_microcode:     file format elf32-powerpc
+
+Contents of section .rodata:
+ fff04000 fffff46c fffff548 fffff778 fffff46c  ...l...H...x...l
+ fff04010 fffff4b4 fffff46c fffff538 fffff730  .......l...8...0
+ fff04020 fffff6e8 fffff46c fffff6dc fffff46c  .......l.......l
+ fff04030 fffff46c fffff6d0 fffff46c fffff46c  ...l.......l...l
+ fff04040 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff04050 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff04060 fffff6c0 fffff46c fffff46c fffff6b0  .......l...l....
+ fff04070 fffff6a4 fffff46c fffff46c fffff46c  .......l...l...l
+ fff04080 fffff46c fffff46c fffff698 fffff684  ...l...l........
+ fff04090 fffff678 fffff664 fffff46c fffff46c  ...x...d...l...l
+ fff040a0 fffff46c fffff46c fffff46c fffff650  ...l...l...l...P
+ fff040b0 fffff4dc fffff600 fffff55c fffff744  ...........\...D
+ fff040c0 fffff518 fffff518 fffff46c fffff46c  ...........l...l
+ fff040d0 fffff46c fffff46c fffff780 fffff73c  ...l...l.......<
+ fff040e0 fffff46c fffff46c fffff490 fffff790  ...l...l........
+ fff040f0 fffff74c fffff46c fffff46c fffff46c  ...L...l...l...l
+ fff04100 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff04110 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff04120 fffff46c fffff46c fffff490 fffff46c  ...l...l.......l
+ fff04130 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff04140 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff04150 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff04160 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff04170 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff04180 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff04190 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff041a0 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff041b0 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff041c0 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff041d0 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff041e0 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff041f0 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff04200 fffff46c fffff46c fffff46c fffff46c  ...l...l...l...l
+ fff04210 fffff4b4 00000000 00000000 00000000  ................

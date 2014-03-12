@@ -1,0 +1,29 @@
+
+String dump of section '.rodata.str1.4':
+  [     0]  (null)
+  [     a]  ROM: reload requested...
+
+  [    24]  ROM: Restarting IOS...
+
+  [    3c]  trying to read bootvar '%s'
+
+  [    5c]  trying to set bootvar '%s'
+
+  [    78]  unhandled syscall 0x%x at pc=0x%x (a1=0x%x,a2=0x%x,a3=0x%x)
+
+  [    ba]  ROMMON Emulation Microcode
+
+  [    d8]  ROMMON emulation microcode.
+
+
+  [    f8]  Microcode has started.
+
+  [   110]  The microcode need to be upgraded to match your emulator version.
+
+  [   154]  IOS
+  [   158]  BOOTLDR
+  [   160]  Launching IOS image at 0x%x...
+
+  [   180]  Image returned to ROM.
+
+

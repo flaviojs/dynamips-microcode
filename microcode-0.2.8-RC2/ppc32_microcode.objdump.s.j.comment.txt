@@ -1,0 +1,9 @@
+
+ppc32_microcode:     file format elf32-powerpc
+
+Contents of section .comment:
+ 0000 00474343 3a202847 4e552920 342e322e  .GCC: (GNU) 4.2.
+ 0010 30000047 43433a20 28474e55 2920342e  0..GCC: (GNU) 4.
+ 0020 322e3000 00474343 3a202847 4e552920  2.0..GCC: (GNU) 
+ 0030 342e322e 30000047 43433a20 28474e55  4.2.0..GCC: (GNU
+ 0040 2920342e 322e3000                    ) 4.2.0.        

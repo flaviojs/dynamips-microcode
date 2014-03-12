@@ -1,0 +1,67 @@
+
+String dump of section '.rodata.str1.8':
+  [     0]  Warning: System Call in BD Slot.
+
+  [    29]  %s
+
+  [    30]  PC = 0x%x, 
+  [    40]  Cause = 0x%x, Status Reg = 0x%x
+
+  [    68]  Cache Exception:
+
+  [    81]  *** Software Interrupt 0 ***
+
+  [    a1]  *** Software Interrupt 1 ***
+
+  [    c1]  *** Unknown IRQ ***
+
+  [    d8]  Stacked Cause Reg = 0x%x, Stacked Status Reg = 0x%x
+
+  [   110]  Current Int Cause = 0x%x, Current Int Status = 0x%x
+
+  [   148]  *** CPU Interrupt ***
+  [   160]  *** TLB Modification Exception ***
+  [   188]  *** TLB (Load/Fetch) Exception ***
+  [   1b0]  *** TLB (Store) Exception ***
+  [   1d0]  *** Address Error (Load/Fetch) Exception ***
+  [   200]  *** Address Error (Store) Exception ***
+  [   228]  *** Bus Error (Fetch) Exception ***
+  [   250]  *** Bus Error (Load) Exception ***
+  [   278]  *** System Call Exception ***
+  [   298]  *** Break Point Exception ***
+  [   2b8]  *** Illegal Opcode Exception ***
+  [   2e0]  *** Coprocessor Unusable Exception ***
+  [   308]  *** Arithmetic Overflow Exception ***
+  [   330]  *** Trap Exception ***
+  [   348]  *** Virtual Coherency (Opcode) Exception ***
+  [   378]  *** Floating Point Exception ***
+  [   3a0]  *** Reserved General Exception ***
+  [   3c8]  *** Watch Exception ***
+  [   3e0]  *** Virtual Coherency (Data) Exception ***
+  [   410]  (null)
+  [   41a]  ROM: reload requested...
+
+  [   438]  ROM: Restarting IOS...
+
+  [   450]  trying to read bootvar '%s'
+
+  [   470]  trying to set bootvar '%s'
+
+  [   490]  unhandled syscall 0x%x at pc=0x%x (a1=0x%x,a2=0x%x,a3=0x%x)
+
+  [   4d2]  ROMMON Emulation Microcode
+
+  [   4f0]  ROMMON emulation microcode.
+
+
+  [   510]  Microcode has started.
+
+  [   528]  The microcode need to be upgraded to match your emulator version.
+
+  [   570]  IOS
+  [   578]  BOOTLDR
+  [   580]  Launching IOS image at 0x%x...
+
+  [   5a0]  Image returned to ROM.
+
+

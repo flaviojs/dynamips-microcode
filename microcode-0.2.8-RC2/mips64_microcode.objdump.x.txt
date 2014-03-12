@@ -1,0 +1,36 @@
+
+mips64_microcode:     file format elf32-bigmips
+mips64_microcode
+architecture: mips:4000, flags 0x00000102:
+EXEC_P, D_PAGED
+start address 0xbfc00000
+
+Program Header:
+    LOAD off    0x00000000 vaddr 0xa0002000 paddr 0xa0002000 align 2**12
+         filesz 0x00000000 memsz 0x00000020 flags rw-
+    LOAD off    0x00001000 vaddr 0xbfc00000 paddr 0xbfc00000 align 2**12
+         filesz 0x000028e0 memsz 0x000028e0 flags rwx
+private flags = 20002001: [abi=O64] [mips3] [not 32bitmode] [noreorder]
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         00002000  bfc00000  bfc00000  00001000  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .rodata       00000220  bfc02000  bfc02000  00003000  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  2 .rodata.str1.8 000005b8  bfc02220  bfc02220  00003220  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  3 .data         00000108  bfc027d8  bfc027d8  000037d8  2**3
+                  CONTENTS, ALLOC, LOAD, DATA
+  4 .bss          00000020  a0002000  a0002000  00000074  2**3
+                  ALLOC
+  5 .reginfo      00000018  00000000  00000000  000038e0  2**2
+                  CONTENTS, READONLY, LINK_ONCE_SAME_SIZE
+  6 .pdr          00000360  00000000  00000000  000038f8  2**2
+                  CONTENTS, READONLY
+  7 .comment      0000005a  00000000  00000000  00003c58  2**0
+                  CONTENTS, READONLY
+SYMBOL TABLE:
+no symbols
+
+
