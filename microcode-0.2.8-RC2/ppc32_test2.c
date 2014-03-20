@@ -1,21 +1,37 @@
 /*
  * This file contains a possible interpretation of the ppc32 microcode.
- * NOTE:
- * - exception vectors are not included (see ...head.S file)
- * - code start at address 0xFFF03000
- * TODO: is it possible to use the builtin functions? (like memcpy)
- * TODO: varargs in remote_print
+ * Code starts at address 0xFFF03000
  *
- * /!\ MUST VALIDATE THIS CODE /!\
- * dunno how accurate this is yet, i'm using a different gcc from
- * the original (4.2.0) so the generated assembly is different
+ * NOTE: cpu exceptions not included (see ...head.S file)
+ *
+ * I'm using a different gcc from the original (4.2.0) so the generated 
+ * assembly is different.
+ *
+ * Inspection procedure:
+ * 1) compile with -O1
+ * 2) for each function:
+ * 2.1) compare assembly
+ * 2.2) while changes are needed: modify source, recompile and recompare
+ * 2.3) annotate result
+ * 3) if source changed: restart inspection
+ * 4) review comments, test-compile and commit
  *
  * Flávio J. Saraiva
  */
 
+#if defined(HAVE_STDARG_H)
+#include <stdarg.h>
+#else
+// assume it's compatible with my version: powerpc-unknown-elf-gcc (crosstool-NG 1.19.0) 4.3.2
+#define va_list           __builtin_va_list
+#define va_start(x,a)     __builtin_va_start(x,a)
+#define va_end(x)         __builtin_va_end(x)
+#define va_arg(x,t)       __builtin_va_arg(x,t)
+//#define va_copy(y,x)    __builtin_va_copy(y,x)
+#endif
 
 /**
- * Access to custom remote control device.
+ * Access to the custom remote control device.
  * Starts at 0xF6000000.
  * Reading and writing to these addresses can have side-effects.
  */
@@ -24,11 +40,11 @@ struct remote_dev {
   unsigned int cpu_id; // (r)
   unsigned int display_cpu_registers; // (w)
   unsigned int display_cpu_memory_info; // (w)
-  unsigned int unused_0010; // unused or reserved // TODO check old history
-  unsigned int ram_size; // (r)
+  unsigned int unused_0010; // unused
+  unsigned int ram_size; // (r) available RAM size in megabytes
   unsigned int rom_size; // (r)
   unsigned int nvram_size; // (r)
-  unsigned int iomem_size; // (r)
+  unsigned int iomem_size; // (r) IOMEM in megabytes (RAM reserved for packets) 
   unsigned int config_reg; // (r)
   unsigned int elf_entry_point; // (r) entry point of the IOS image
   unsigned int elf_machine_id; // (r) machine ID of the IOS image
@@ -44,89 +60,116 @@ struct remote_dev {
   unsigned int rommon_variable; // (rw)
   unsigned int rommon_variable_command; // (rw)
 };
-#define remote_ctrl (*((volatile struct remote_dev*)0xF6000000))
-#define ROMMON_SET_VAR 1
-#define ROMMON_GET_VAR 2
-#define ROMMON_CLEAR_VAR_STAT 3
-#define NVRAM_7E0 *((unsigned int*)remote_ctrl.nvram_address+0x7E0)
-#define ROM_ID 0x1e94b3df
+#define ROM_ID                  0x1e94b3df
+#define ROMMON_SET_VAR          1
+#define ROMMON_GET_VAR          2
+#define ROMMON_CLEAR_VAR_STAT   3
+#define remote_ctrl   ( *((volatile struct remote_dev*)0xF6000000) )
+#define nvram_7E0     ( *((volatile unsigned int*)(remote_ctrl.nvram_address+0x7E0)) )
 
 
-#define CONSOLE 0
-#define LOG 1
-void remote_print(int stream, char* fmt, ...);
+#define CONSOLE   0
+#define LOG       1
+#define TO_HEX(x)   ( ((x) <= 9)? '0'+(x): 'a'-10+(x) )
+int remote_print(int stream, char* fmt, ...);
 void remote_put_char(int stream, char c);
 void remote_put_string(int stream, char* str);
+void inline crash(void);
 
 
 
-/*
+/**
  * This data starts at address 0x4000.
  */
 struct bss_data {
-  /* registers saved and restored for a syscall */
+  // registers saved and restored for a syscall
   unsigned int _r8;
   unsigned int _r9;
   unsigned int _r10;
   unsigned int _LR;
   unsigned int _XER;
   unsigned int _CR;
+
   unsigned int unused_18;
   unsigned int unused_1C;
+
   char* nvram_bootldr; // nvram_address+0x200 (set to "BOOTLDR" at startup)
   char* nvram_ios; // nvram_address+0x80 (set to "IOS" at startup)
-  unsigned int nvram_780; // nvram_address+0x780 (set to elf_entry_point at startup)
+  unsigned int nvram_780; // nvram_address+0x780
+
+  unsigned int unused_2C;
+  unsigned int unused_30;
+  unsigned int unused_34;
+  unsigned int unused_38;
+  unsigned int unused_3C;
 };
 struct bss_data __attribute__((section(".bss"))) data;
 
 
-static inline char to_hex(unsigned int val) {
-  return (val > 9)? val - 10 + 'a': val + '0';
-}
-
-
 /**
  * Copy len bytes from src to dst.
- * WARNING: expects len > 0
+ *
+ * WARNING: expects len > 0, buffer overflow for len == 0
+ *
+ * Inspection: PASS - called by cpu_exception_00100 (see ...head.S)
+ * - equivalent assembly
  */
-void my_memcpy(void* dst, void* src, unsigned int len)
+void my_memcpy(char* dst, char* src, unsigned int len)
 {
-  char* out = (char*)dst;
-  char* in = (char*)in;
   do {
-    *out++ = *in++;
+    *dst++ = *src++;
   } while (--len);
 }
 
 
 /**
  * Launch the ISO image by calling the target address.
- * TODO: is restart_image a separate function?
+ * 
+ * Inspection: PASS
+ * - same assembly
+ * - the function restart_image should be a label before the blr (return) instruction
  */
 void launch_image(unsigned int addr)
 {
+  // FIXME: save the current state
   asm("mtctr %0"::"r"(addr));
   asm("li %r3, 2");
   asm("li %r4, 0");
   asm("li %r5, 0");
-  asm("mtcr %r4");/* CR = 0 */
-  asm("mtxer %r4");/* XER = 0 */
-  asm("bctrl");/* call addr */
+  asm("mtcr %r4");// CR = 0
+  asm("mtxer %r4");// XER = 0
+  asm("bctrl");// call addr(2,0,0)
+  // XXX: can asm fix restart_image? "lbl_restart_image:"
+  return;
 }
 
 
 /**
- * Restart the image? (empty)
- * NOTE: it's actually pointing to the return of launch_image
+ * Restart the IOS image.
+ *
+ * /!\ BROKEN /!\ No way just jumping to the end of launch_image can work... >.>
+ *
+ * Needs to restore the registers to before the IOS image is launched.
+ *
+ * Inspection: FAIL->PASS - equivalent since there is only a blr instruction
+ * - equivalent assembly
+ * - should be a label before the blr (return) instruction in the function launch_image
  */
 void restart_image(unsigned int addr)
 {
+  // XXX: can asm fix restart_image? "b lbl_restart_image"
+  // FIXME: restore state saved in launch_image
+  return;
 }
 
 
 /**
  * Copy string from src to dst.
+ *
  * WARNING: does not copy NUL byte
+ *
+ * Inspection: PASS
+ * - equivalent assembly
  */
 void my_strcpy(char* dst, char* src)
 {
@@ -138,7 +181,11 @@ void my_strcpy(char* dst, char* src)
 
 /**
  * Copy up to len bytes from string src to dst.
- * WARNING: does not NUL terminate buffer if string is bigger
+ *
+ * WARNING: does not NUL terminate buffer if string is too big
+ *
+ * Inspection: PASS - unused
+ * - equivalent assembly
  */
 void my_strncpy(char* dst, char* src, unsigned int len)
 {
@@ -151,6 +198,9 @@ void my_strncpy(char* dst, char* src, unsigned int len)
 
 /**
  * Get the string length.
+ *
+ * Inspection: PASS - unused
+ * - equivalent assembly
  */
 unsigned int my_strlen(char* str)
 {
@@ -163,58 +213,68 @@ unsigned int my_strlen(char* str)
 
 /**
  * Print to the console or log.
- * TODO variable arguments without libc?
+ *
+ * Inspection: PASS
+ * - equivalent assembly
+ * - out of order (placed before start_microcode)
  */
-void remote_print(int stream, char* fmt, ...)
+int remote_print(int stream, char* fmt, ...)
 {
-  if (*fmt == 0)
-    return;
-#define NEXT_ARG() 0 // TODO
+  va_list ap;
+  va_start(ap, fmt);
   for(; *fmt; ++fmt) {
     if (*fmt != '%') {
       char c = *fmt;
       remote_put_char(stream, c);
       continue;
     }
-    switch (++*fmt) {
+    ++fmt;
+    switch (*fmt) {
     case '%':
-      remote_put_char(stream, *fmt);
+      remote_put_char(stream, '%');
       break;
 
     case 'c': {
-      char c = (char)NEXT_ARG();
-      remote_put_char(stream, c);
+      remote_put_char(stream, (char)va_arg(ap, unsigned int));
+      break;
     }
 
     case 's': {
-      char* str = (char*)NEXT_ARG();
+      char* str = va_arg(ap, char*);
       if (str == 0)
-	str = "(null)";
+        str = "(null)";
       remote_put_string(stream, str);
       break;
     }
 
     case 'x': {
-      unsigned int val = (unsigned int)NEXT_ARG();
-      remote_put_char(stream, to_hex((val >> 28)&0xF));
-      remote_put_char(stream, to_hex((val >> 24)&0xF));
-      remote_put_char(stream, to_hex((val >> 20)&0xF));
-      remote_put_char(stream, to_hex((val >> 16)&0xF));
-      remote_put_char(stream, to_hex((val >> 12)&0xF));
-      remote_put_char(stream, to_hex((val >>  8)&0xF));
-      remote_put_char(stream, to_hex((val >>  4)&0xF));
-      remote_put_char(stream, to_hex((val      )&0xF));
+      unsigned int val = va_arg(ap, unsigned int);
+      remote_put_char(stream, (char)TO_HEX((val&0xF0000000) >> 28));
+      remote_put_char(stream, (char)TO_HEX((val&0x0F000000) >> 24));
+      remote_put_char(stream, (char)TO_HEX((val&0x00F00000) >> 20));
+      remote_put_char(stream, (char)TO_HEX((val&0x000F0000) >> 16));
+      remote_put_char(stream, (char)TO_HEX((val&0x0000F000) >> 12));
+      remote_put_char(stream, (char)TO_HEX((val&0x00000F00) >>  8));
+      remote_put_char(stream, (char)TO_HEX((val&0x000000F0) >>  4));
+      remote_put_char(stream, (char)TO_HEX((val&0x0000000F)      ));
       break;
     }
     }
   }
+  va_end(ap);
+  return 0;
 }
 
 
 /**
  * Read a ROMMON variable.
+ *
+ * WARNING: buffer overflow for buflen <= 1
+ *
+ * Inspection: PASS
+ * - equivalent assembly
  */
-int read_bootvar(char* name, char* buf, unsigned int buflen)
+int read_bootvar(char* name, char* buf, int buflen)
 {
   // write variable name
   for (; *name; ++name)
@@ -224,7 +284,8 @@ int read_bootvar(char* name, char* buf, unsigned int buflen)
   if (remote_ctrl.rommon_variable_command)
     return -1; // not found?
   // copy contents
-  for (--buflen; buflen;--buflen) {
+  int n;
+  for (n = (buflen - 1 <= 0)? 1: buflen - 1; n; --n) {
     *buf++ = (char)remote_ctrl.rommon_variable;
     *buf = 0;
   }
@@ -233,9 +294,11 @@ int read_bootvar(char* name, char* buf, unsigned int buflen)
 }
 
 
-
 /**
  * Write a ROMMON variable.
+ *
+ * Inspection: PASS
+ * - equivalent assembly
  */
 int write_bootvar(char* name_value)
 {
@@ -248,20 +311,19 @@ int write_bootvar(char* name_value)
 }
 
 
-
 /**
  * Handle a system call exception.
+ *
+ * Inspection: PASS - called by cpu_exception_00C00 (see ...head.S)
+ * - equivalent assembly
+ * - out of order (placed after start_microcode)
+ * - does not inline crash
  */
-int syscall_handler(unsigned int syscall, // r3
-		    unsigned int a1, // r4
-		    unsigned int a2, // r5
-		    unsigned int a3, // r6
-		    unsigned int pc) // r7
+int syscall_handler(unsigned int syscall, unsigned int a1, unsigned int a2, unsigned int a3, unsigned int pc)
 {
   switch (syscall) {
   default: { // unhandled syscall
-    remote_print(CONSOLE, "unhandled syscall 0x%x at pc=0x%x (a1=0x%x,a2=0x%x,a3=0x%x)\n",
-		 syscall, pc, a1, a2, a3);
+    remote_print(LOG, "unhandled syscall 0x%x at pc=0x%x (a1=0x%x,a2=0x%x,a3=0x%x)\n", syscall, pc, a1, a2, a3);
     return -1;
   }
 
@@ -271,8 +333,8 @@ int syscall_handler(unsigned int syscall, // r3
   }
 
   case 4:
-  case 132: { // get RAM size in megabytes
-    return (remote_ctrl.ram_size >> 20);
+  case 132: { // get available RAM size in bytes (from megabytes)
+    return (remote_ctrl.ram_size << 20);
   }
 
   case 44: { // read cookie
@@ -343,12 +405,12 @@ int syscall_handler(unsigned int syscall, // r3
     return remote_ctrl.config_reg;
   }
 
-  case 27: { // get IOMEM size in megabytes (IOMEM = RAM reserved for packets) 
-    return (remote_ctrl.iomem_size >> 20);
+  case 27: { // get IOMEM size in bytes (from megabytes)
+    return (remote_ctrl.iomem_size << 20);
   }
 
-  case 24: { // get NVRAM size in kilobytes
-    return (remote_ctrl.nvram_size >> 10);
+  case 24: { // get NVRAM size in bytes (from kilobytes)
+    return (remote_ctrl.nvram_size << 10);
   }
 
   case 13: { // initial elf_entry_point
@@ -369,6 +431,7 @@ int syscall_handler(unsigned int syscall, // r3
     }
     else {
       remote_ctrl.stop_virtual_machine = 1;
+      crash();
       return 0;
     }
   }
@@ -387,8 +450,7 @@ int syscall_handler(unsigned int syscall, // r3
 
   case 60: { // TODO unknown
     unsigned int io_memory_size = remote_ctrl.io_memory_size;
-    if ((io_memory_size&0x8000) == 0 &&
-	NVRAM_7E0 != 0) {
+    if ((io_memory_size&0x8000) == 0 && nvram_7E0 != 0) {
       return 0;
     } else {
       return (io_memory_size&0x18000); // 32KiB or 96KiB
@@ -404,7 +466,7 @@ int syscall_handler(unsigned int syscall, // r3
   }
 
   case 59: { // TODO unknown (related to io_memory_size)
-    NVRAM_7E0 = a1;
+    nvram_7E0 = a1;
     return 1;
   }
 
@@ -414,6 +476,9 @@ int syscall_handler(unsigned int syscall, // r3
 
 /**
  * Put a character in the console or log
+ *
+ * Inspection: PASS
+ * - same assembly
  */
 void remote_put_char(int stream, char c)
 {
@@ -428,6 +493,9 @@ void remote_put_char(int stream, char c)
 
 /**
  * Put a string in the console or log
+ *
+ * Inspection: PASS
+ * - equivalent assembly
  */
 void remote_put_string(int stream, char* str)
 {
@@ -448,8 +516,11 @@ void remote_put_string(int stream, char* str)
 
 /**
  * Crash by calling NULL.
+ *
+ * Inspection: PASS
+ * - same assembly
  */
-void crash(void)
+void inline crash(void)
 {
   ((void (*)(void))0)();
 }
@@ -457,6 +528,9 @@ void crash(void)
 
 /**
  * Start the microcode.
+ *
+ * Inspection: PASS - called by cpu_exception_00100 (see ...head.S)
+ * - equivalent assembly
  */
 void start_microcode(void)
 {
@@ -474,7 +548,7 @@ void start_microcode(void)
   data.nvram_bootldr = (char*)(remote_ctrl.nvram_address+0x200);
   my_strcpy(data.nvram_bootldr, "BOOTLDR");
 
-  data.nvram_780 = remote_ctrl.elf_entry_point;
+  data.nvram_780 = remote_ctrl.nvram_address+0x780;
 
   // run
   do {

@@ -3,6 +3,8 @@ dynamips-microcode
 
 Turning the microcodes of dynamips into compilable sources.
 
+Related issue: https://github.com/GNS3/dynamips/issues/7
+
 I'm gonna start with `ppc32_microcode` since 32-bit PowerPC assembly is easier
 than 64-bit MIPS assembly.
 
@@ -26,9 +28,9 @@ would work, due to the missing hardware features.
 Microcode
 ---------
 
-The microcode has enough features to run the IOS image but don't expect any of
-other ROMMON features. There is some work done for restart but it appears to be
-incomplete.
+The microcode has enough features to run the IOS images but don't expect any of
+the other ROMMON features.
+There is some work done for restart but it appears to be incomplete.
 
 It is unlikely to work in other emulators since it relies on the incompleteness
 of the emulated hardware and on the custom remote control device found in
@@ -44,7 +46,7 @@ I use two cross-compilers created with [crosstools-ng](http://crosstool-ng.org/)
 
 Each toolchain will be inside a subdirectory of ~/x-tools.
 They are used to decompile the original binary files and to compile the
-disassembled microcode for testing and comparing purposes.
+disassembled microcode for testing and comparison purposes.
 
 At a later date I'll try to use existing cross-compilers to compile the
 resulting source. (no idea what to use or how to use them)

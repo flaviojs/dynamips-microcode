@@ -21,9 +21,12 @@ ppc32_test: ppc32_test.s ppc32_test.lds
 	@powerpc-unknown-elf-objdump -s -j .data ppc32_test > ppc32_test.objdump.s.j.data.txt
 	-@diff ppc32_microcode.objdump.s.j.data.txt ppc32_test.objdump.s.j.data.txt
 
+
+CFLAGS=-O1 -mbig -nostdlib -Ttext=0xFFF00000 -Tbss=0x00004000
 .PHONY: ppc32_test2
 ppc32_test2:
-	@echo "Compiling ppc32_test2_head.S ppc32_test2.c"
-	powerpc-unknown-elf-gcc -O2 -mbig -nostdlib -Ttext=0xFFF00000 -Tbss=0x00004000 -o ppc32_test2 ppc32_test2_head.S ppc32_test2.c
-	@echo "Inspecting..."
-	powerpc-unknown-elf-objdump -d ppc32_test2
+	@echo "-- Removing ppc32_test2 --"
+	-rm ppc32_test2
+	@echo "-- Compiling ppc32_test2 (from ppc32_test2_head.S ppc32_test2.c) --"
+	powerpc-unknown-elf-gcc $(CFLAGS) -o ppc32_test2 ppc32_test2_head.S ppc32_test2.c
+	@echo "-- Done --"
